@@ -41,13 +41,14 @@ class EarningsCalculator:
             f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date}&to={end_date}&apikey={API_KEY}"
         )
 
-        df = pd.json_normalize(resp.json())
+        #df = pd.json_normalize(resp.json())
         """filtered_df = df.query("eps.notnull()", engine="python").query(
             "epsEstimated.notnull()", engine="python"
         )"""
-        filtered_df = df[(~df['eps'].isnull()) & (~df['epsEstimated'].isnull())]
-        filtered_df["beatEarnings"] = np.where(
+        #filtered_df = df[(~df['eps'].isnull()) & (~df['epsEstimated'].isnull())]
+        """filtered_df["beatEarnings"] = np.where(
             filtered_df["eps"] > filtered_df["epsEstimated"], 1, 0
-        )
-        summary_dict = filtered_df["beatEarnings"].value_counts().to_dict()
+        )"""
+        #summary_dict = filtered_df["beatEarnings"].value_counts().to_dict()
+        summary_dict = {"status_code" : resp.status_code}
         return summary_dict
