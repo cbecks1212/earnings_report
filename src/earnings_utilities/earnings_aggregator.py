@@ -214,9 +214,9 @@ class EarningsCalculator:
                 ticker_df["beatEarnings"] = np.where(
                 ticker_df["eps"] > ticker_df["epsEstimated"], "Beat", "Missed")
                 ticker_df["performanceAfterEarnings"] = ticker_df.apply(lambda x: EarningsCalculator().calc_price_perf_after_earnings(x.symbol, datetime.strftime(x.date, "%Y-%m-%d")), axis=1)
-                earnings_summary_text = EarningsCalculator().generate_ai_text(symbol)
+                #earnings_summary_text = EarningsCalculator().generate_ai_text(symbol)
                 summary_dict = ticker_df[["symbol", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings"]].to_dict(orient="records")
-                summary_dict[0].update({"transcriptSummary" : earnings_summary_text})
+                #summary_dict[0].update({"transcriptSummary" : earnings_summary_text})
         return summary_dict
     
 
