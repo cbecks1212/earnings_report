@@ -202,7 +202,7 @@ class EarningsCalculator:
         today_date = datetime.now()
 
         resp = requests.get(
-            f"https://financialmodelingprep.com/api/v3/historical/earning_calendar/AAPL?apikey={payload}"
+            f"https://financialmodelingprep.com/api/v3/historical/earning_calendar/{symbol}?apikey={payload}"
         )
 
         df = pd.json_normalize(resp.json())
