@@ -5,18 +5,25 @@ import pandas as pd
 import requests
 from datetime import timedelta
 #from src.config import settings
+from openai import OpenAI
 from google.cloud import secretmanager
 
 client = secretmanager.SecretManagerServiceClient()
 project_id = "orbital-kit-400022"
 secret_id = "DEV_FIN_APIKEY"
+open_ai_id = "OPENAI_API_KEY"
 
 # Build the secret name
 secret_name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
+open_ai_name = f"projects/{project_id}/secrets/{open_ai_id}/versions/latest"
 
 # Access the secret
 response = client.access_secret_version(request={"name": secret_name})
 payload = response.payload.data.decode("UTF-8")
+
+ai_reponse = client.access_secret_version(request={"name": open_ai_name})
+openai_api_key = ai_reponse.payload.data.decode("UTF-8")
+
 
 class EarningsCalculator:
     def calc_earning_start_end_date(self):
@@ -167,6 +174,26 @@ class EarningsCalculator:
         summary_dict = filtered_df.to_dict(orient="records")
         return summary_dict
     
+    def generate_ai_text(self, ticker: str):
+        resp = requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year=2024&quarter=2&apikey={payload}").json()
+        if len(resp) > 0:
+            client = OpenAI(api_key=openai_api_key)
+            transcript = resp[0]["content"]
+            transcript = transcript[0:10000]
+            chat_obj = client.chat.completions.create(messages=[
+            {"role": "user", "content": f"Analyze and summarize {ticker}'s following earnings transcript: {transcript}"}
+        ],
+            model="gpt-4",
+            temperature=1,
+            max_tokens=500)
+
+            ai_text = chat_obj.choices[0].message.content
+        else:
+            ai_text = f"{ticker}'s earnings transcript not found"
+        
+
+        return ai_text
+    
     def analyze_company_earnings_report(self, symbol: str) -> dict:
         start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
         start_date = datetime.strptime(start_date, "%Y-%m-%d")
@@ -187,6 +214,9 @@ class EarningsCalculator:
                 ticker_df["beatEarnings"] = np.where(
                 ticker_df["eps"] > ticker_df["epsEstimated"], "Beat", "Missed")
                 ticker_df["performanceAfterEarnings"] = ticker_df.apply(lambda x: EarningsCalculator().calc_price_perf_after_earnings(x.symbol, datetime.strftime(x.date, "%Y-%m-%d")), axis=1)
+                earnings_summary_text = EarningsCalculator().generate_ai_text(symbol)
                 summary_dict = ticker_df[["symbol", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings"]].to_dict(orient="records")
+                summary_dict[0].update({"transcriptSummary" : earnings_summary_text})
         return summary_dict
+    
 
