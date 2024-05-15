@@ -215,9 +215,11 @@ class EarningsCalculator:
 
         df = pd.json_normalize(resp.json())
         df['date'] = pd.to_datetime(df['date'])
-        ticker_df = df.query("date >= @start_date and date < @end_date")
+        ticker_df = df.query("date >= @start_date and date < @end_date and symbol == @symbol")
 
         if not ticker_df.empty:
+            print("RUNNING EARNINGS ANALYSIS")
+            print(ticker_df.head())
             if ticker_df['date'].iloc[0] <= today_date:
                 ticker_df["beatEarnings"] = np.where(
                 ticker_df["eps"] > ticker_df["epsEstimated"], "Beat", "Missed")
@@ -225,6 +227,11 @@ class EarningsCalculator:
                 earnings_summary_text = EarningsCalculator().generate_ai_text(symbol)
                 summary_dict = ticker_df[["date", "symbol", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings"]].to_dict(orient="records")
                 summary_dict[0].update({"transcriptSummary" : earnings_summary_text})
+            else:
+                earnings_date = datetime.strftime(ticker_df['date'].iloc[0], "%Y-%m-%d")
+                summary_dict = {"symbol" : symbol, "earnings_date": f"{symbol} will announce its earnings on {earnings_date}"}
+        else:
+            summary_dict = {"msg" : f"{symbol}'s earnings date has yet to be confirmed"}
         return summary_dict
     
 
