@@ -263,7 +263,7 @@ class EarningsCalculator:
 
         ticker_df = EarningsCalculator().get_company_earnings(ticker)
         if not ticker_df.empty:
-            ticket_beat_earnings = ticker_df["beatEarnings"].iloc[0]
+            ticker_beat_earnings = ticker_df["beatEarnings"].iloc[0]
         else:
             ticker_beat_earnings = f"{ticker} has not announced earnings yet"
 
