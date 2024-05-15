@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from typing_extensions import Optional, List
 import numpy as np
 import pandas as pd
 import requests
@@ -128,6 +128,27 @@ class EarningsCalculator:
             return str(filtered_price_df['priceChangePostEarnings'].iloc[-1])
         else:
             return "NULL"
+        
+    def get_company_earnings(self, symbol: str) -> pd.DataFrame:
+        start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
+
+        resp = requests.get(
+            f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date}&to={end_date}&apikey={payload}"
+        )
+
+        df = pd.json_normalize(resp.json())
+        filtered_df = df.query("eps.notnull()", engine="python").query(
+            "epsEstimated.notnull()", engine="python"
+        ).query("symbol == @symbol")
+
+        if not filtered_df.empty:
+            filtered_df["beatEarnings"] = np.where(filtered_df["eps"] > filtered_df["epsEstimated"], "Beat", "Missed"
+        )
+            filtered_df['performanceAfterEarnings'] = filtered_df.apply(lambda x: EarningsCalculator().calc_price_perf_after_earnings(x.symbol, x.date), axis=1)
+
+            return filtered_df
+        else:
+            return pd.DataFrame()
     
     def summarize_company_earnings(self, params: dict) -> dict:
         start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
@@ -218,8 +239,6 @@ class EarningsCalculator:
         ticker_df = df.query("date >= @start_date and date < @end_date and symbol == @symbol")
 
         if not ticker_df.empty:
-            print("RUNNING EARNINGS ANALYSIS")
-            print(ticker_df.head())
             if ticker_df['date'].iloc[0] <= today_date:
                 ticker_df["beatEarnings"] = np.where(
                 ticker_df["eps"] > ticker_df["epsEstimated"], "Beat", "Missed")
@@ -233,5 +252,43 @@ class EarningsCalculator:
         else:
             summary_dict = {"msg" : f"{symbol}'s earnings date has yet to be confirmed"}
         return summary_dict
+    
+    def peer_analysis_earnings(self, ticker: str, peer_list: Optional[List] = None):
+        master_peer_df = pd.DataFrame()
+        if peer_list is None:
+            ticker_peers_req = requests.get(f"https://financialmodelingprep.com/api/v4/stock_peers?symbol={ticker}&apikey={payload}").json()
+            ticker_peers = ticker_peers_req[0]['peersList']
+        else:
+            ticker_peers = peer_list
+
+        ticker_df = EarningsCalculator().get_company_earnings(ticker)
+        if not ticker_df.empty:
+            ticket_beat_earnings = ticker_df["beatEarnings"].iloc[0]
+        else:
+            ticker_beat_earnings = f"{ticker} has not announced earnings yet"
+
+
+        for peer in ticker_peers:
+            peer_df = EarningsCalculator().get_company_earnings(peer)
+            master_peer_df = pd.concat([master_peer_df, peer_df])
+            
+        peer_counts = master_peer_df['beatEarnings'].value_counts()
+        try:
+            peer_beat = str(peer_counts["Beat"])
+        except:
+            peer_beat = "0"
+        
+        try:
+            peer_missed = str(peer_counts["Missed"])
+        except:
+            peer_missed = "0"
+
+        summary_dict = {ticker: ticker_beat_earnings, "peerBeatEarnings" : peer_beat, "peerMissedEarnings" : peer_missed}
+        master_peer_df = pd.concat([master_peer_df, ticker_df])
+        summary_dict.update({"data" : master_peer_df[["symbol", "date", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings"]].to_dict(orient="records")})
+
+        return summary_dict
+
+
     
 

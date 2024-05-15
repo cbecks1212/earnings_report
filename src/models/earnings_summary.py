@@ -4,3 +4,6 @@ from typing_extensions import Optional, List
 class EarningsSummarizer(BaseModel):
     industry: Optional[List] = None
     indexes: Optional[List] = None
+
+class PeerEarnings(BaseModel):
+    peers: Optional[List] = None
