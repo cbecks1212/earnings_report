@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 import requests
 import base64
+import json
 
 router = APIRouter()
 
@@ -14,7 +15,9 @@ def init_earnings_pdf_summary(symbol: str):
 def download_earnings_summary(task_id: str):
     task_obj = {"task_id" : task_id}
     req = requests.post("https://agile-anchorage-11058-7b018c820619.herokuapp.com/download-earnings-synopsis", params=task_obj)
-    return req.content
+    dict_ = json.loads(req.content.decode())
+    content = dict_["content"]
+    return {"content" : content}
 
 @router.get("/get-report-status")
 def get_report_status(task_id: str):
