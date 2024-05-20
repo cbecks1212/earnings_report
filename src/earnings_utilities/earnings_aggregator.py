@@ -56,6 +56,11 @@ class EarningsCalculator:
         df = df.sort_values(by='date')
         return df
     
+    def calc_stock_performance(self, ticker) -> pd.DataFrame:
+        performance = requests.get(f"https://financialmodelingprep.com/api/v3/stock-price-change/{ticker}?apikey={payload}").json()
+        df = pd.json_normalize(performance)
+        return df
+    
     
 
     def calc_earnings_summary(self, params: dict) -> dict:
@@ -111,7 +116,6 @@ class EarningsCalculator:
         #date = datetime.strptime(date, "%Y-%m-%d")
         try:
             price_df = EarningsCalculator().get_price_data(ticker)
-            print(price_df.head())
             price_df['date'] = price_df['date'].dt.strftime("%Y-%m-%d")
         except:
             price_df = None
@@ -145,6 +149,9 @@ class EarningsCalculator:
             filtered_df["beatEarnings"] = np.where(filtered_df["eps"] > filtered_df["epsEstimated"], "Beat", "Missed"
         )
             filtered_df['performanceAfterEarnings'] = filtered_df.apply(lambda x: EarningsCalculator().calc_price_perf_after_earnings(x.symbol, x.date), axis=1)
+
+            price_perf_df = EarningsCalculator().calc_stock_performance(symbol)
+            filtered_df = filtered_df.merge(price_perf_df, on="symbol")
 
             return filtered_df
         else:
@@ -270,8 +277,7 @@ class EarningsCalculator:
 
         for peer in ticker_peers:
             peer_df = EarningsCalculator().get_company_earnings(peer)
-            master_peer_df = pd.concat([master_peer_df, peer_df])
-            
+            master_peer_df = pd.concat([master_peer_df, peer_df])   
         peer_counts = master_peer_df['beatEarnings'].value_counts()
         try:
             peer_beat = str(peer_counts["Beat"])
@@ -285,7 +291,9 @@ class EarningsCalculator:
 
         summary_dict = {ticker: ticker_beat_earnings, "peerBeatEarnings" : peer_beat, "peerMissedEarnings" : peer_missed}
         master_peer_df = pd.concat([master_peer_df, ticker_df])
-        summary_dict.update({"data" : master_peer_df[["symbol", "date", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings"]].to_dict(orient="records")})
+        summary_dict.update({"data" : master_peer_df[["symbol", "date", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings", "1M", "3M", "6M", "1Y", "ytd"]].to_dict(orient="records")})
+
+
 
         return summary_dict
 

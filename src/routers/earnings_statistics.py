@@ -6,7 +6,7 @@ from src.models.earnings_summary import EarningsSummarizer, PeerEarnings
 router = APIRouter()
 
 
-@router.post("/earnings-summary", summary="Provides a count of companies that beat or missed their earnings. There is an option to filter counts by industry and index.")
+@router.post("/earnings-summary", summary="Provides a count of companies that beat or missed their earnings. There is an option to filter counts by industry and index in the JSON body of the request.")
 async def get_earnings_summary(model: Optional[EarningsSummarizer] = None):
     if model is not None:
         model = model.model_dump()
@@ -21,12 +21,12 @@ async def industry_earnings_summary(model: Optional[EarningsSummarizer] = None):
     company_summaries = EarningsCalculator().summarize_company_earnings(model)
     return company_summaries
 
-@router.post("/company-earnings-analysis")
+@router.post("/company-earnings-analysis", summary="Returns an analysis of a company's earnings call.")
 async def company_earnings_analysis(symbol: str):
     company_analysis = EarningsCalculator().analyze_company_earnings_report(symbol)
     return company_analysis
 
-@router.post("/peer-earnings-analysis")
+@router.post("/peer-earnings-analysis", summary="Provides a comparison between a symbol and its peers. There is an option to customize the peer list via the JSON body of the request.")
 async def peer_earnings_analysis(symbol: str, peer_model: Optional[PeerEarnings] = None):
     if peer_model is not None:
         peer_model = peer_model.model_dump()
