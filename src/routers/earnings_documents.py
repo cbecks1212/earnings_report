@@ -5,8 +5,8 @@ import json
 router = APIRouter()
 
 @router.post("/initialize-earnings-pdf-summary", summary="Start the task of creating a summary of a symbol's earnings report.")
-def init_earnings_pdf_summary(symbol: str):
-    params = {"ticker" : symbol}
+def init_earnings_pdf_summary(symbol: str, word_count: int):
+    params = {"ticker" : symbol, "word_count" : word_count}
     req = requests.post("https://agile-anchorage-11058-7b018c820619.herokuapp.com/summarize-earnings-transcript", params=params)
     return {"content" : req.text}
 
