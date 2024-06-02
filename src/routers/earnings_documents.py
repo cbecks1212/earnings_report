@@ -8,13 +8,13 @@ router = APIRouter()
 def init_earnings_pdf_summary(symbol: str, word_count: int):
     params = {"ticker" : symbol, "word_count" : word_count}
     req = requests.post("https://agile-anchorage-11058-7b018c820619.herokuapp.com/summarize-earnings-transcript", params=params)
-    return {"content" : req.text}
+    return req.content
 
 @router.get("/get-pdf-report-status", summary="Check the status of an earnings summary.")
 def get_report_status(task_id: str):
     task_obj = {"task_id" : task_id}
     req = requests.get("https://agile-anchorage-11058-7b018c820619.herokuapp.com/check_task_status", params=task_obj)
-    return {"content" : req.content}
+    return req.content
 
 @router.post("/download-pdf-earnings-summary", summary="Once the task of creating an earnings summary has finished, this endpoint returns the content as bytes. \n You can take the byte-content and write it to a PDF file in the desired directory.")
 def download_earnings_summary(task_id: str):
