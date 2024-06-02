@@ -29,20 +29,25 @@ class EarningsCalculator:
     def calc_earning_start_end_date(self):
         todays_date = datetime.now().date()
         month = todays_date.month
-        if month in [3, 4, 5]:
+        if month in [4, 5, 6]:
             start_month = "03"
             start_day = "31"
             end_month = "06"
             end_day = "30"
-        elif month in [6, 7, 8]:
+        elif month in [7, 8, 9]:
             start_month = "06"
             start_day = "30"
             end_month = "09"
             end_day = "30"
-        elif month in [9, 10, 11, 12]:
+        elif month in [10, 11, 12]:
             start_month = "09"
             start_day = "30"
             end_month = "12"
+            end_day = "31"
+        else:
+            start_month = "01"
+            start_day = "30"
+            end_month = "03"
             end_day = "31"
 
         earning_start_day = f"{todays_date.year}-{start_month}-{start_day}"
@@ -165,6 +170,7 @@ class EarningsCalculator:
         )
 
         df = pd.json_normalize(resp.json())
+
         filtered_df = df.query("eps.notnull()", engine="python").query(
             "epsEstimated.notnull()", engine="python"
         )
