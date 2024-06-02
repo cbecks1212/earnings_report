@@ -14,7 +14,7 @@ async def get_earnings_summary(model: Optional[EarningsSummarizer] = None):
     #return {"Beat": earnings_summary[1], "Missed": earnings_summary[0]}
     return earnings_summary
 
-@router.post("/earnings-by-industry", summary="Provides a breakout of earnings by industry. There is an also an option to refine this further by filtering by companies in the S&P 500 and/or NASDAQ.")
+@router.post("/earnings-breakout", summary="Provides a breakout of earnings, detailing actual EPS vs estimated EPS. There is an also an option to refine this further by filtering by companies in the S&P 500 and/or NASDAQ.")
 async def industry_earnings_summary(model: Optional[EarningsSummarizer] = None):
     if model is not None:
         model = model.model_dump()
