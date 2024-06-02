@@ -195,7 +195,7 @@ class EarningsCalculator:
             filtered_df["eps"] > filtered_df["epsEstimated"], "Beat", "Missed"
         )
 
-        filtered_df = filtered_df.merge(metadata_df, on="symbol")[["symbol", "industry", "beatEarnings", "date"]]
+        filtered_df = filtered_df.merge(metadata_df, on="symbol")[["symbol", "industry", "beatEarnings", "date"]].fillna("NULL")
         
         #filtered_df['price_change_after_earnings'] = filtered_df.apply(lambda x: EarningsCalculator().calc_price_perf_after_earnings(x.symbol, x.date), axis=1)
 
