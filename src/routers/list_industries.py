@@ -1,5 +1,8 @@
 from fastapi import APIRouter
+from typing import Optional
 import pandas as pd
+from ..models.earnings_summary import EarningsSummarizer
+from ..earnings_utilities.earnings_aggregator import EarningsCalculator
 
 router = APIRouter()
 
@@ -13,3 +16,13 @@ def get_industries():
 def get_indexes():
     
     return {"indexes" : ["S&P 500", "NASDAQ 100"]}
+
+@router.post("/upcoming-announcements")
+def get_announcement_dates(model: Optional[EarningsSummarizer] = None):
+    if model is not None:
+        data = model.model_dump()
+    else:
+        data = None
+    announcements = EarningsCalculator().get_earnings_announcements(data)
+    return announcements
+

@@ -7,6 +7,7 @@ from datetime import timedelta
 #from src.config import settings
 from openai import OpenAI
 from google.cloud import secretmanager
+from .common_functions import return_stock_metadata, return_constituents
 
 client = secretmanager.SecretManagerServiceClient()
 project_id = "orbital-kit-400022"
@@ -302,7 +303,43 @@ class EarningsCalculator:
 
 
         return summary_dict
+    
+    def get_earnings_announcements(self, request_data):
+        metadata_df = return_stock_metadata()
+        indexes = None
+        industries = None
+        if request_data is not None:
+            indexes = request_data["indexes"]
+            industries = request_data["industry"]
 
+        start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
+        todays_date = datetime.now().strftime("%Y-%m-%d")
+        df = pd.json_normalize(requests.get(f"https://financialmodelingprep.com/api/v3/earning_calendar?from={todays_date}&to={end_date}&apikey={payload}").json())
+        df["date"] = pd.to_datetime(df["date"])
+        df.sort_values(by="date", ascending=True, inplace=True)
 
+        if indexes is not None:
+            sp_constituents = []
+            nasdaq_constituents = []
+
+            if "S&P 500" in indexes:
+                sp_constituents = return_constituents("S&P 500")
+            if "NASDAQ 100" in indexes:
+                nasdaq_constituents = return_constituents("NASDAQ 100")
+            
+            constituents = sp_constituents + nasdaq_constituents
+            constituents = list(set(constituents))
+
+            df = df.query("symbol in @constituents")
+        
+        if industries is not None:
+            metadata_df = metadata_df.query("industry in @industries")
+        
+        records = pd.merge(df, metadata_df, on="symbol").fillna("NULL").to_dict(orient="records")
+
+        return records
+        
+
+        
     
 
