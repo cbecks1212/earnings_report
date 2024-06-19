@@ -26,3 +26,9 @@ def get_announcement_dates(model: Optional[EarningsSummarizer] = None):
     announcements = EarningsCalculator().get_earnings_announcements(data)
     return announcements
 
+@router.get("/upcoming-announcements/{symbol}")
+def get_announcement_symbol(symbol: str):
+    announcement = EarningsCalculator().get_earnings_announcement_symbol(symbol)
+    return announcement
+
+

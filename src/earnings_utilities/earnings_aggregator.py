@@ -338,6 +338,18 @@ class EarningsCalculator:
         records = pd.merge(df, metadata_df, on="symbol").fillna("NULL").to_dict(orient="records")
 
         return records
+    
+    def get_earnings_announcement_symbol(self, symbol):
+        start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
+
+        df = pd.json_normalize(requests.get(f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date}&to={end_date}&apikey={payload}").json())
+
+        df = df.query("symbol == @symbol")
+
+        announcement_date = df['date'].iloc[0]
+
+        return {"announcement_date" : announcement_date}
+
         
 
         
