@@ -1,6 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
+from typing import Optional
 import requests
 import json
+from io import BytesIO
+from ..models.earnings_summary import EarningsSummarizer
+from ..earnings_utilities.earnings_aggregator import EarningsCalculator
+from ..earnings_utilities.excel_functions import create_excel_object
 
 router = APIRouter()
 
@@ -28,3 +33,20 @@ def download_earnings_summary(task_id: str):
         return {"content" : content}
     else:
         return {"content" : "Task still in progress"}
+    
+@router.post("/download-earnings-announcements-excel", summary="Download all upcoming earnings announcements as an Excel file")
+def download_announcements_excel(model: Optional[EarningsSummarizer] = None):
+    if model is not None:
+        data = model.model_dump()
+    else:
+        data = None
+
+    records = EarningsCalculator().get_earnings_announcements(data)
+    buffer = create_excel_object(records)
+    buffer.seek(0)
+    
+    headers = {
+        'Content-Disposition': 'attachment; filename="sample.xlsx"'
+    }
+
+    return Response(content=buffer.getvalue(), media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', headers=headers)
