@@ -1,9 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from typing import Optional, List
 
 from src.earnings_utilities.earnings_aggregator import EarningsCalculator
 from src.models.earnings_summary import EarningsSummarizer, PeerEarnings
-router = APIRouter()
+from ..auth.utils import get_current_user
+
+router = APIRouter(tags=["Earnings Statistics"],
+                   dependencies=[Depends(get_current_user)])
 
 
 @router.post("/earnings-summary", summary="Provides a count of companies that beat or missed their earnings. There is an option to filter counts by industry and index in the JSON body of the request.")

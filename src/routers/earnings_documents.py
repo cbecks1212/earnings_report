@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Depends
 from typing import Optional
 import requests
 import json
@@ -6,11 +6,15 @@ from io import BytesIO
 import pandas as pd
 import openpyxl
 import requests
+from ..auth.utils import get_current_user
 from ..models.earnings_summary import EarningsSummarizer
 from ..earnings_utilities.earnings_aggregator import EarningsCalculator
 from ..earnings_utilities.excel_functions import create_excel_object, adjust_excel_column_widths
 
-router = APIRouter()
+router = APIRouter(
+    tags=["Generate Files"],
+    dependencies=[Depends(get_current_user)]
+)
 
 @router.post("/initialize-earnings-pdf-summary", summary="Start the task of creating a summary of a symbol's earnings report.")
 def init_earnings_pdf_summary(symbol: str, word_count: int):

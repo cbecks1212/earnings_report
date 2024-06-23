@@ -1,10 +1,12 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from typing import Optional
 import pandas as pd
+from ..auth.utils import get_current_user
 from ..models.earnings_summary import EarningsSummarizer
 from ..earnings_utilities.earnings_aggregator import EarningsCalculator
 
-router = APIRouter()
+router = APIRouter(tags=["Earnings Announcements and Helpers"],
+                   dependencies=[Depends(get_current_user)])
 
 @router.get("/list-industries")
 def get_industries():
