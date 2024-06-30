@@ -27,9 +27,10 @@ openai_api_key = ai_reponse.payload.data.decode("UTF-8")
 
 
 class EarningsCalculator:
-    def calc_earning_start_end_date(self):
+    def calc_earning_start_end_date(self, month=None):
         todays_date = datetime.now().date()
-        month = todays_date.month
+        if month is None:
+            month = todays_date.month
         if month in [4, 5, 6]:
             start_month = "03"
             start_day = "31"
@@ -46,14 +47,18 @@ class EarningsCalculator:
             end_month = "12"
             end_day = "31"
         else:
-            start_month = "01"
-            start_day = "30"
+            start_month = "12"
+            start_day = "31"
             end_month = "03"
             end_day = "31"
 
         earning_start_day = f"{todays_date.year}-{start_month}-{start_day}"
         earning_end_day = f"{todays_date.year}-{end_month}-{end_day}"
-        return earning_start_day, earning_end_day
+        start_day = datetime.strptime(earning_start_day, '%Y-%m-%d') + timedelta(days=7)
+        if start_day.year != todays_date.year:
+            start_day = start_day - timedelta(days=365)
+        start_day = start_day.strftime("%Y-%m-%d")
+        return start_day, earning_end_day
     
     def get_price_data(self, ticker):
         json_prices = requests.get(f"https://financialmodelingprep.com/api/v3/historical-price-full/{ticker}?serietype=line&apikey={payload}").json()

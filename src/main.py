@@ -2,7 +2,8 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.routers.earnings_statistics import router as earnings_summary_router
-from src.routers.list_industries import router as industry_router
+from src.routers.helpers import router as helper_router
+from src.routers.earnings_announcements import router as announcement_router
 from src.routers.earnings_documents import router as earnings_doc_router
 from src.routers.auth import router as auth_router
 
@@ -25,5 +26,6 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(earnings_summary_router)
-app.include_router(industry_router)
+app.include_router(announcement_router)
 app.include_router(earnings_doc_router)
+app.include_router(helper_router)
