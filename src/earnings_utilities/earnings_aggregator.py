@@ -115,6 +115,12 @@ class EarningsCalculator:
             if industry is not None:
                 industry_counts = filtered_df.groupby("industry")["beatEarnings"].value_counts().reset_index().to_dict(orient='records')
                 summary_dict.update({"industry_counts" : industry_counts})
+
+        if "Missed" not in summary_dict:
+            summary_dict.update({"Missed" : 0})
+        
+        if "Beat" not in summary_dict:
+            summary_dict.update({"Beat" : 0})
         
         return summary_dict
     
