@@ -77,6 +77,12 @@ class EarningsCalculator:
     def calc_earnings_summary(self, params: dict) -> dict:
         start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
 
+        if "earnings_start_date" in params:
+            start_date = params["earnings_start_date"]
+        
+        if "earnings_end_date" in params:
+            end_date = params["earnings_end_date"]
+
         resp = requests.get(
             f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date}&to={end_date}&apikey={payload}"
         )
@@ -126,6 +132,8 @@ class EarningsCalculator:
         
         if "Beat" not in summary_dict:
             summary_dict.update({"Beat" : 0})
+
+        summary_dict.update({"earnings_start_date": start_date, "earnings_end_date" : end_date})    
         
         return summary_dict
     
