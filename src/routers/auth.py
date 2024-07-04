@@ -41,7 +41,7 @@ async def confirm_email(token: str, db: db_dependency):
         result.confirmed = True
         db.commit()
 
-        return {"message": "Your account has now successfully verified!"}
+        return {"message": "Your account has now been successfully verified!"}
     else:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not verify account.")
 
