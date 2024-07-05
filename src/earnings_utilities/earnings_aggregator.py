@@ -79,11 +79,6 @@ class EarningsCalculator:
         print("Params")
         print(params)
 
-        if params["earnings_start_date"] is not None:
-            start_date = params["earnings_start_date"]
-        
-        if params["earnings_end_date"] is not None:
-            end_date = params["earnings_end_date"]
 
         resp = requests.get(
             f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date}&to={end_date}&apikey={payload}"
@@ -115,6 +110,12 @@ class EarningsCalculator:
                     filtered_df = filtered_df.query("symbol in @sp_tickers")
                 elif "NASDAQ 100" in indexes:
                     filtered_df = filtered_df.query("symbol in @nasdaq_tickers")
+
+            if params["earnings_start_date"] is not None:
+                start_date = params["earnings_start_date"]
+        
+            if params["earnings_end_date"] is not None:
+                end_date = params["earnings_end_date"]
 
         else:
             metadata_df = None
@@ -187,12 +188,6 @@ class EarningsCalculator:
     def summarize_company_earnings(self, params: dict) -> dict:
         start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
 
-        if params["earnings_start_date"] is not None:
-            start_date = params["earnings_start_date"]
-        
-        if params["earnings_end_date"] is not None:
-            end_date = params["earnings_end_date"]
-
         resp = requests.get(
             f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date}&to={end_date}&apikey={payload}"
         )
@@ -224,6 +219,12 @@ class EarningsCalculator:
                     filtered_df = filtered_df.query("symbol in @sp_tickers")
                 elif "NASDAQ 100" in indexes:
                     filtered_df = filtered_df.query("symbol in @nasdaq_tickers")
+            
+            if params["earnings_start_date"] is not None:
+                start_date = params["earnings_start_date"]
+        
+            if params["earnings_end_date"] is not None:
+                end_date = params["earnings_end_date"]
 
         filtered_df["beatEarnings"] = np.where(
             filtered_df["eps"] > filtered_df["epsEstimated"], "Beat", "Missed"
@@ -335,17 +336,17 @@ class EarningsCalculator:
         metadata_df = return_stock_metadata()
         indexes = None
         industries = None
+        start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
+
         if request_data is not None:
             indexes = request_data["indexes"]
             industries = request_data["industry"]
 
-        start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
-
-        if request_data["earnings_start_date"] is not None:
-            start_date = request_data["earnings_start_date"]
+            if request_data["earnings_start_date"] is not None:
+                start_date = request_data["earnings_start_date"]
         
-        if request_data["earnings_end_date"] is not None:
-            end_date = request_data["earnings_end_date"]
+            if request_data["earnings_end_date"] is not None:
+                end_date = request_data["earnings_end_date"]
         todays_date = datetime.now().strftime("%Y-%m-%d")
         df = pd.json_normalize(requests.get(f"https://financialmodelingprep.com/api/v3/earning_calendar?from={todays_date}&to={end_date}&apikey={payload}").json())
         df["date"] = pd.to_datetime(df["date"])
