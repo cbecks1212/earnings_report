@@ -3,6 +3,7 @@ import requests
 import numpy as np
 from google.cloud import secretmanager
 
+
 client = secretmanager.SecretManagerServiceClient()
 project_id = "orbital-kit-400022"
 secret_id = "DEV_FIN_APIKEY"
@@ -33,6 +34,15 @@ def return_constituents(index: str) -> list:
     constituents = [symbol["symbol"] for symbol in constituents_dict]
     
     return constituents
+
+def return_valid_symbol(ticker: str):
+
+    symbols_obj = requests.get(f"https://financialmodelingprep.com/api/v3/available-traded/list?apikey={payload}").json()
+    symbols_df = pd.json_normalize(symbols_obj)
+
+    if symbols_df.query("symbol == @ticker").empty:
+        return False
+    return True
 
 
 

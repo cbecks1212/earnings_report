@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Response, Depends
+from fastapi import APIRouter, Response, Depends, HTTPException
+from starlette import status
 from typing import Optional
 import requests
 import json
@@ -10,6 +11,7 @@ from ..auth.utils import get_current_user
 from ..models.earnings_summary import EarningsSummarizer
 from ..earnings_utilities.earnings_aggregator import EarningsCalculator
 from ..earnings_utilities.excel_functions import create_excel_object, adjust_excel_column_widths
+from ..earnings_utilities.common_functions import return_valid_symbol
 
 router = APIRouter(
     tags=["Generate Files"],
@@ -18,6 +20,10 @@ router = APIRouter(
 
 @router.post("/initialize-earnings-pdf-summary", summary="Start the task of creating a summary of a symbol's earnings report.")
 def init_earnings_pdf_summary(symbol: str, word_count: int):
+    is_valid_symbol = return_valid_symbol(symbol)
+    if not is_valid_symbol:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{symbol} is not a valid symbol")
+    
     params = {"ticker" : symbol, "word_count" : word_count}
     req = requests.post("https://agile-anchorage-11058-7b018c820619.herokuapp.com/summarize-earnings-transcript", params=params)
     return req.content

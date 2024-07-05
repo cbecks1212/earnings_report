@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from starlette import status
 from typing import Optional, List
 
 from src.earnings_utilities.earnings_aggregator import EarningsCalculator
+from src.earnings_utilities.common_functions import return_valid_symbol
 from src.models.earnings_summary import EarningsSummarizer, PeerEarnings
 from ..auth.utils import get_current_user
 
@@ -26,11 +28,18 @@ async def industry_earnings_summary(model: Optional[EarningsSummarizer] = None):
 
 @router.post("/company-earnings-analysis", summary="Returns an analysis of a company's earnings call.")
 async def company_earnings_analysis(symbol: str):
+    is_valid_symbol = return_valid_symbol(symbol)
+    if not is_valid_symbol:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{symbol} is not a valid symbol")
     company_analysis = EarningsCalculator().analyze_company_earnings_report(symbol)
     return company_analysis
 
 @router.post("/peer-earnings-analysis", summary="Provides a comparison between a symbol and its peers. There is an option to customize the peer list via the JSON body of the request.")
 async def peer_earnings_analysis(symbol: str, peer_model: Optional[PeerEarnings] = None):
+    is_valid_symbol = return_valid_symbol(symbol)
+    if not is_valid_symbol:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{symbol} is not a valid symbol")
+    
     if peer_model is not None:
         peer_model = peer_model.model_dump()
         peer_analysis = EarningsCalculator().peer_analysis_earnings(symbol, peer_model)
