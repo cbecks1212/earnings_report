@@ -76,11 +76,13 @@ class EarningsCalculator:
 
     def calc_earnings_summary(self, params: dict) -> dict:
         start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
+        print("Params")
+        print(params)
 
-        if "earnings_start_date" in params:
+        if params["earnings_start_date"] is not None:
             start_date = params["earnings_start_date"]
         
-        if "earnings_end_date" in params:
+        if params["earnings_end_date"] is not None:
             end_date = params["earnings_end_date"]
 
         resp = requests.get(
@@ -184,6 +186,12 @@ class EarningsCalculator:
     
     def summarize_company_earnings(self, params: dict) -> dict:
         start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
+
+        if params["earnings_start_date"] is not None:
+            start_date = params["earnings_start_date"]
+        
+        if params["earnings_end_date"] is not None:
+            end_date = params["earnings_end_date"]
 
         resp = requests.get(
             f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date}&to={end_date}&apikey={payload}"
@@ -332,6 +340,12 @@ class EarningsCalculator:
             industries = request_data["industry"]
 
         start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
+
+        if request_data["earnings_start_date"] is not None:
+            start_date = request_data["earnings_start_date"]
+        
+        if request_data["earnings_end_date"] is not None:
+            end_date = request_data["earnings_end_date"]
         todays_date = datetime.now().strftime("%Y-%m-%d")
         df = pd.json_normalize(requests.get(f"https://financialmodelingprep.com/api/v3/earning_calendar?from={todays_date}&to={end_date}&apikey={payload}").json())
         df["date"] = pd.to_datetime(df["date"])
@@ -353,8 +367,12 @@ class EarningsCalculator:
         
         if industries is not None:
             metadata_df = metadata_df.query("industry in @industries")
+
+        date_dict = {"earnings_start_date" : start_date, "earnings_end_date" : end_date}    
         
         records = pd.merge(df, metadata_df, on="symbol").fillna("NULL").to_dict(orient="records")
+        
+        records.insert(0, date_dict)
 
         return records
     
