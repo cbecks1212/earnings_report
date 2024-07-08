@@ -54,7 +54,7 @@ class EarningsCalculator:
 
         earning_start_day = f"{todays_date.year}-{start_month}-{start_day}"
         earning_end_day = f"{todays_date.year}-{end_month}-{end_day}"
-        start_day = datetime.strptime(earning_start_day, '%Y-%m-%d') + timedelta(days=7)
+        start_day = datetime.strptime(earning_start_day, '%Y-%m-%d') + timedelta(days=10)
         if start_day.year != todays_date.year:
             start_day = start_day - timedelta(days=365)
         start_day = start_day.strftime("%Y-%m-%d")
@@ -289,7 +289,8 @@ class EarningsCalculator:
                 summary_dict = ticker_df[["date", "symbol", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings"]].to_dict(orient="records")
                 summary_dict[0].update({"transcriptSummary" : earnings_summary_text})
             else:
-                earnings_date = datetime.strftime(ticker_df['date'].iloc[0], "%Y-%m-%d")
+                """earnings_date = datetime.strftime(ticker_df['date'].iloc[0], "%Y-%m-%d")"""
+                earnings_date = EarningsCalculator().get_earnings_announcement_symbol(symbol)["announcement_date"]
                 summary_dict = {"symbol" : symbol, "earnings_date": f"{symbol} will announce its earnings on {earnings_date}"}
         else:
             summary_dict = {"msg" : f"{symbol}'s earnings date has yet to be confirmed"}
