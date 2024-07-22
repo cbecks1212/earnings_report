@@ -313,8 +313,9 @@ class EarningsCalculator:
 
         for peer in ticker_peers:
             peer_df = EarningsCalculator().get_company_earnings(peer)
-            master_peer_df = pd.concat([master_peer_df, peer_df])   
-        peer_counts = master_peer_df['beatEarnings'].value_counts()
+            master_peer_df = pd.concat([master_peer_df, peer_df])
+        if 'beatEarnings' in master_peer_df.columns.tolist():    
+            peer_counts = master_peer_df['beatEarnings'].value_counts()
         try:
             peer_beat = str(peer_counts["Beat"])
         except:
