@@ -15,8 +15,7 @@ from .database.database import ENGINE
 app = FastAPI()
 tables.Base.metadata.create_all(bind=ENGINE)
 
-origins = ["https://127.0.0.1:8000",
-           "https://www.my-flex-report.com"]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
