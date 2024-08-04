@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, BackgroundTasks
+import asyncio
 import pandas as pd
 import numpy as np
 import joblib
@@ -56,13 +57,13 @@ async def upload_model(file: UploadFile, db: db_dependency, task: BackgroundTask
 async def forecast_eps(db: db_dependency, model: EarningsForecast):
     data = model.model_dump()
     ticker = data["symbol"]
-    x = MLUtils().load_eps_feature_data(ticker)
-    model_result = db.query(Models).filter(Models.model_name == 'eps_predictor_v2.pkl').first()
+    x = await asyncio.to_thread(MLUtils().load_eps_feature_data, ticker)
+    model_result = await asyncio.to_thread(db.query(Models).filter(Models.model_name == 'eps_predictor_v2.pkl').first)
     binary_data = model_result.model
-    model = MLUtils().load_model(binary_data)
+    model = await asyncio.to_thread(MLUtils().load_model, binary_data)
     #model = joblib.load(BytesIO(binary_data))
-    pred = model.predict(x)[0]
-    return {"Forecasted EPS" : pred}
+    pred = await asyncio.to_thread(model.predict, x)
+    return {"Forecasted EPS" : pred[0].item()}
 
 
     
