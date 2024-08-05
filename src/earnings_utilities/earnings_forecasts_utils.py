@@ -44,8 +44,9 @@ class MLUtils:
         merged_df = merged_df.merge(earnings_df, left_on=["symbol", "date"], right_on=["symbol", "fiscalDateEnding"])
 
         merged_df.sort_values(by=["symbol", "date_x"], ascending=True, inplace=True)
-        merged_df.fillna(-1000000000, inplace=True)
+        #merged_df.fillna(-1000000000, inplace=True)
         numeric_df = merged_df.select_dtypes(include=np.number)
+        numeric_df = numeric_df.apply(lambda x: x.fillna(x.median()), axis=0)
 
         numeric_df = numeric_df.drop(columns=['eps', 'revenue'])
 
