@@ -266,17 +266,22 @@ class EarningsCalculator:
         return ai_text
     
     def analyze_company_earnings_report(self, symbol: str) -> dict:
-        start_date, end_date = EarningsCalculator().calc_earning_start_end_date()
-        start_date = datetime.strptime(start_date, "%Y-%m-%d")
-        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        earnings_agg = EarningsCalculator()
+        start_date_str, end_date_str = earnings_agg.calc_earning_start_end_date()
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
 
         today_date = datetime.now()
 
-        resp = requests.get(
+        """resp = requests.get(
             f"https://financialmodelingprep.com/api/v3/historical/earning_calendar/{symbol}?apikey={payload}"
-        )
+        )"""
+        resp = requests.get(f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date_str}&to={end_date_str}&apikey=3539c122c2e660ee9cdbd32cc28c0e04").json()
+        filtered_json = [obj for obj in resp if obj['symbol'] == symbol]
+        print(filtered_json)
 
-        df = pd.json_normalize(resp.json())
+
+        df = pd.json_normalize(filtered_json)
         df['date'] = pd.to_datetime(df['date'])
         ticker_df = df.query("date >= @start_date and date < @end_date and symbol == @symbol")
 
@@ -389,6 +394,21 @@ class EarningsCalculator:
         announcement_date = df['date'].iloc[0]
 
         return {"announcement_date" : announcement_date}
+    
+    def get_closest_date(self, ticker):
+        json = requests.get(f"https://financialmodelingprep.com/api/v3/historical/earning_calendar/{ticker}?apikey={payload}").json()[0:6]
+        todays_date = datetime.now().date()
+        year = todays_date.year
+        date_list = []
+
+        for i in range(0, len(json)):
+            date_str = json[i]['date']
+            json_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            if json_date > todays_date and json_date.year == year:
+                date_list.append(json_date)
+    
+        next_date = min(date_list)
+        return next_date
 
         
 
