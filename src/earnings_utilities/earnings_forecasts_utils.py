@@ -54,7 +54,8 @@ class MLUtils:
 
         return X
     
-    @lru_cache
+    @staticmethod
+    @lru_cache(maxsize=1)
     def load_model(self, binary_data):
         model = joblib.load(BytesIO(binary_data))
         return model

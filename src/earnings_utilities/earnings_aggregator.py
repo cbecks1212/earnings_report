@@ -6,6 +6,7 @@ import requests
 from datetime import timedelta
 #from src.config import settings
 from openai import OpenAI
+import json
 from google.cloud import secretmanager
 from .common_functions import return_stock_metadata, return_constituents
 
@@ -238,30 +239,33 @@ class EarningsCalculator:
         return summary_dict
     
     def generate_ai_text(self, ticker: str):
-        earnings_dates_resp = requests.get(f"https://financialmodelingprep.com/api/v4/earning_call_transcript?symbol={ticker}&apikey={payload}").json()
-        if len(earnings_dates_resp) > 0:
-            quarter = earnings_dates_resp[0][0]
-            year = earnings_dates_resp[0][1]
+        start, end = EarningsCalculator().calc_earning_start_end_date()
+        if start[5:7] == "10":
+            quarter = "4"
+        elif start[5:7] == "7":
+            quarter = "3"
+        elif start == "4":
+            quarter = "2"
+        else:
+            quarter = "1"
+        year = start[0:4]
 
-            resp = requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()
+        resp = requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()
 
-            if len(resp) > 0:
-                client = OpenAI(api_key=openai_api_key)
-                transcript = resp[0]["content"]
-                transcript = transcript[0:10000]
-                chat_obj = client.chat.completions.create(messages=[
+        if len(resp) > 0:
+            client = OpenAI(api_key=openai_api_key)
+            transcript = resp[0]["content"]
+            transcript = transcript[0:10000]
+            chat_obj = client.chat.completions.create(messages=[
                 {"role": "user", "content": f"Analyze and summarize {ticker}'s following earnings transcript: {transcript}"}
                 ],
-                model="gpt-4",
-                temperature=1,
-                max_tokens=500)
+            model="gpt-4",
+            temperature=1,
+            max_tokens=500)
 
-                ai_text = chat_obj.choices[0].message.content
-            else:
-                ai_text = f"{ticker}'s earnings transcript not found"
+            ai_text = chat_obj.choices[0].message.content
         else:
             ai_text = f"{ticker}'s earnings transcript not found"
-        
 
         return ai_text
     
@@ -276,8 +280,18 @@ class EarningsCalculator:
         """resp = requests.get(
             f"https://financialmodelingprep.com/api/v3/historical/earning_calendar/{symbol}?apikey={payload}"
         )"""
-        resp = requests.get(f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date_str}&to={end_date_str}&apikey=3539c122c2e660ee9cdbd32cc28c0e04").json()
-        filtered_json = [obj for obj in resp if obj['symbol'] == symbol]
+        with requests.get(f"https://financialmodelingprep.com/api/v3/earning_calendar?from={start_date_str}&to={end_date_str}&apikey=3539c122c2e660ee9cdbd32cc28c0e04", stream=True) as response:
+            buffer = ""
+            for line in response.iter_lines():
+                if line:
+                    buffer += line.decode("utf-8")
+                    if buffer.endswith("]"):
+                        data = json.loads(buffer)
+                        for item in data:
+                            if item['symbol'] == symbol:
+                                filtered_json = item
+                                break
+        
         print(filtered_json)
 
 
