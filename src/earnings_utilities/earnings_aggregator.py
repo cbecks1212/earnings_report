@@ -244,13 +244,22 @@ class EarningsCalculator:
             quarter = "4"
         elif start[5:7] == "7":
             quarter = "3"
-        elif start == "4":
+        elif start[5:7] == "4":
             quarter = "2"
         else:
             quarter = "1"
         year = start[0:4]
+        print(quarter)
+        print(year)
 
         resp = requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()
+        print(resp)
+
+        if len(resp) < 1:
+            print('running')
+            quarter = int(quarter) - 1
+            quarter = str(quarter)
+            resp =requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()
 
         if len(resp) > 0:
             client = OpenAI(api_key=openai_api_key)
