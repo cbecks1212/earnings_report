@@ -3,6 +3,7 @@ from typing_extensions import Optional, List
 import numpy as np
 import pandas as pd
 import requests
+import httpx
 from datetime import timedelta
 #from src.config import settings
 from openai import OpenAI
@@ -238,7 +239,7 @@ class EarningsCalculator:
         summary_dict = filtered_df.to_dict(orient="records")
         return summary_dict
     
-    def generate_ai_text(self, ticker: str):
+    async def generate_ai_text(self, ticker: str):
         start, end = EarningsCalculator().calc_earning_start_end_date()
         if start[5:7] == "10":
             quarter = "4"
@@ -249,36 +250,43 @@ class EarningsCalculator:
         else:
             quarter = "1"
         year = start[0:4]
-        print(quarter)
-        print(year)
 
-        resp = requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()
-        print(resp)
+        """resp = requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()
+        print(resp)"""
+
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}")
+            resp = resp.json()
 
         if len(resp) < 1:
             print('running')
             quarter = int(quarter) - 1
             quarter = str(quarter)
-            resp =requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()
+            """resp =requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()"""
+            async with httpx.AsyncClient(timeout=60) as client:
+                resp = await client.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}")
+                resp = resp.json()
 
-        if len(resp) > 0:
-            client = OpenAI(api_key=openai_api_key)
-            transcript = resp[0]["content"]
-            transcript = transcript[0:10000]
-            chat_obj = client.chat.completions.create(messages=[
-                {"role": "user", "content": f"Analyze and summarize {ticker}'s following earnings transcript: {transcript}"}
-                ],
-            model="gpt-4",
-            temperature=1,
-            max_tokens=500)
-
-            ai_text = chat_obj.choices[0].message.content
+                if len(resp) > 0:
+            #client = OpenAI(api_key=openai_api_key)
+                    transcript = resp[0]["content"]
+                    transcript = transcript[0:10000]
+                    openai_resp = await client.post("https://api.openai.com/v1/chat/completions", headers={"Authorization": f"Bearer {openai_api_key}"},
+                    json={
+                        "model": "gpt-4",
+                        "messages": [{"role": "user", "content": f"Analyze and summarize {ticker}'s following earnings transcript: {transcript}"}],
+                        "temperature": 1,
+                        "max_tokens": 500
+                    })
+                    openai_data = openai_resp.json()
+                    print(openai_data) 
+                    ai_text = openai_data["choices"][0]["message"]
         else:
             ai_text = f"{ticker}'s earnings transcript not found"
 
         return ai_text
     
-    def analyze_company_earnings_report(self, symbol: str) -> dict:
+    async def analyze_company_earnings_report(self, symbol: str) -> dict:
         earnings_agg = EarningsCalculator()
         start_date_str, end_date_str = earnings_agg.calc_earning_start_end_date()
         start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
@@ -313,7 +321,7 @@ class EarningsCalculator:
                 ticker_df["beatEarnings"] = np.where(
                 ticker_df["eps"] > ticker_df["epsEstimated"], "Beat", "Missed")
                 ticker_df["performanceAfterEarnings"] = ticker_df.apply(lambda x: earnings_agg.calc_price_perf_after_earnings(x.symbol, datetime.strftime(x.date, "%Y-%m-%d")), axis=1)
-                earnings_summary_text = earnings_agg.generate_ai_text(symbol)
+                earnings_summary_text = await earnings_agg.generate_ai_text(symbol)
                 summary_dict = ticker_df[["date", "symbol", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings"]].to_dict(orient="records")
                 summary_dict[0].update({"transcriptSummary" : earnings_summary_text})
             else:

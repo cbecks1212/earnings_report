@@ -29,9 +29,10 @@ async def industry_earnings_summary(model: Optional[EarningsSummarizer] = None):
 @router.post("/company-earnings-analysis", summary="Returns an analysis of a company's earnings call.")
 async def company_earnings_analysis(symbol: str):
     is_valid_symbol = return_valid_symbol(symbol)
+    calc = EarningsCalculator()
     if not is_valid_symbol:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"{symbol} is not a valid symbol")
-    company_analysis = EarningsCalculator().analyze_company_earnings_report(symbol)
+    company_analysis = await calc.analyze_company_earnings_report(symbol)
     return company_analysis
 
 @router.post("/peer-earnings-analysis", summary="Provides a comparison between a symbol and its peers. There is an option to customize the peer list via the JSON body of the request.")
