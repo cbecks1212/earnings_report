@@ -49,8 +49,8 @@ async def peer_earnings_analysis(symbol: str, peer_model: Optional[PeerEarnings]
     return peer_analysis
 
 @router.get("/price-after-earnings", status_code=200)
-async def get_price_after_earnings(ticker: str):
+async def get_price_after_earnings(symbol: str):
     earnings_calc = EarningsCalculator()
-    ticker_earnings_date = earnings_calc.get_earnings_announcement_symbol(ticker)['announcement_date']
-    price_perf = EarningsCalculator().calc_price_perf_after_earnings(ticker, ticker_earnings_date)
-    return {"ticker" : ticker, "earnings_date" : ticker_earnings_date, "price_performance_after_earnings" : price_perf}
+    ticker_earnings_date = earnings_calc.get_earnings_announcement_symbol(symbol)['announcement_date']
+    price_perf = EarningsCalculator().calc_price_perf_after_earnings(symbol, ticker_earnings_date)
+    return {"symbol" : symbol, "earnings_date" : ticker_earnings_date, "price_performance_after_earnings" : price_perf}
