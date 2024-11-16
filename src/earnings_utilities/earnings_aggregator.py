@@ -264,26 +264,25 @@ class EarningsCalculator:
             quarter = int(quarter) - 1
             quarter = str(quarter)
             """resp =requests.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}").json()"""
-            async with httpx.AsyncClient(timeout=60) as client:
-                resp = await client.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}")
-                resp = resp.json()
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.get(f"https://financialmodelingprep.com/api/v3/earning_call_transcript/{ticker}?year={year}&quarter={quarter}&apikey={payload}")
+            resp = resp.json()
 
-                if len(resp) > 0:
+            if len(resp) > 0:
             #client = OpenAI(api_key=openai_api_key)
-                    transcript = resp[0]["content"]
-                    transcript = transcript[0:10000]
-                    openai_resp = await client.post("https://api.openai.com/v1/chat/completions", headers={"Authorization": f"Bearer {openai_api_key}"},
+                transcript = resp[0]["content"]
+                transcript = transcript[0:10000]
+                openai_resp = await client.post("https://api.openai.com/v1/chat/completions", headers={"Authorization": f"Bearer {openai_api_key}"},
                     json={
                         "model": "gpt-4",
                         "messages": [{"role": "user", "content": f"Analyze and summarize {ticker}'s following earnings transcript: {transcript}"}],
                         "temperature": 1,
                         "max_tokens": 500
                     })
-                    openai_data = openai_resp.json()
-                    print(openai_data) 
-                    ai_text = openai_data["choices"][0]["message"]
-        else:
-            ai_text = f"{ticker}'s earnings transcript not found"
+                openai_data = openai_resp.json()
+                ai_text = openai_data["choices"][0]["message"]
+            else:
+                ai_text = f"{ticker}'s earnings transcript not found"
 
         return ai_text
     
