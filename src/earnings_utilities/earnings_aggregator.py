@@ -154,7 +154,7 @@ class EarningsCalculator:
             if date_obj.weekday() == 0:
                 prior_date =   date_obj - timedelta(days=3)
             else:
-                prior_date = date_obj - timedelta(days=1)
+                prior_date = date_obj + timedelta(days=1)
             prior_date = prior_date.strftime("%Y-%m-%d")
             dates = [prior_date, date]
             filtered_price_df = price_df.query("date in @dates")
@@ -233,6 +233,7 @@ class EarningsCalculator:
         )
 
         filtered_df = filtered_df.merge(metadata_df, on="symbol")[["symbol", "industry", "beatEarnings", "date"]].fillna("NULL")
+        
         
         #filtered_df['price_change_after_earnings'] = filtered_df.apply(lambda x: EarningsCalculator().calc_price_perf_after_earnings(x.symbol, x.date), axis=1)
 
