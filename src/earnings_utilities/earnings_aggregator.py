@@ -324,7 +324,7 @@ class EarningsCalculator:
             if ticker_df['date'].iloc[0] <= today_date:
                 ticker_df["beatEarnings"] = np.where(
                 ticker_df["eps"] > ticker_df["epsEstimated"], "Beat", "Missed")
-                ticker_df["performanceAfterEarnings"] = ticker_df.apply(lambda x: earnings_agg.calc_price_perf_after_earnings(x.symbol, datetime.strftime(x.date, "%Y-%m-%d")), axis=1)
+                ticker_df["stockPerformanceAfterEarnings"] = ticker_df.apply(lambda x: earnings_agg.calc_price_perf_after_earnings(x.symbol, datetime.strftime(x.date, "%Y-%m-%d")), axis=1)
                 ticker_price_perf = earnings_agg.get_ticker_price_performance(symbol)
                 if ticker_price_perf:
                     ticker_df['ytd_price_performance_pct'] = ticker_price_perf['ytd']
@@ -332,7 +332,7 @@ class EarningsCalculator:
                     ticker_df['ytd_price_performance_pct'] = np.nan
 
                 earnings_summary_text = await earnings_agg.generate_ai_text(symbol, data=str(ticker_df.to_dict(orient='records')))
-                summary_dict = ticker_df[["date", "symbol", "eps", "epsEstimated", "beatEarnings", "performanceAfterEarnings", "ytd_price_performance_pct"]].to_dict(orient="records")
+                summary_dict = ticker_df[["date", "symbol", "eps", "epsEstimated", "beatEarnings", "stockPerformanceAfterEarnings", "ytd_price_performance_pct"]].to_dict(orient="records")
                 summary_dict[0].update({"transcriptSummary" : earnings_summary_text})
             else:
                 """earnings_date = datetime.strftime(ticker_df['date'].iloc[0], "%Y-%m-%d")"""

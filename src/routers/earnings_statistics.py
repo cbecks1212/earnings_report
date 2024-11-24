@@ -53,4 +53,4 @@ async def get_price_after_earnings(symbol: str):
     earnings_calc = EarningsCalculator()
     ticker_earnings_date = earnings_calc.get_earnings_announcement_symbol(symbol)['announcement_date']
     price_perf = EarningsCalculator().calc_price_perf_after_earnings(symbol, ticker_earnings_date)
-    return {"symbol" : symbol, "earnings_date" : ticker_earnings_date, "price_performance_after_earnings" : price_perf}
+    return {"symbol" : symbol, "earnings_date" : ticker_earnings_date, "stock_price_performance_after_earnings" : price_perf}
