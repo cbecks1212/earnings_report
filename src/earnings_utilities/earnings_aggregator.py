@@ -240,7 +240,7 @@ class EarningsCalculator:
         summary_dict = filtered_df.to_dict(orient="records")
         return summary_dict
     
-    async def generate_ai_text(self, ticker: str):
+    async def generate_ai_text(self, ticker: str, data: str = None):
         start, end = EarningsCalculator().calc_earning_start_end_date()
         if start[5:7] == "10":
             quarter = "4"
@@ -271,11 +271,15 @@ class EarningsCalculator:
             if len(resp) > 0:
             #client = OpenAI(api_key=openai_api_key)
                 transcript = resp[0]["content"]
-                transcript = transcript[0:10000]
+                transcript = transcript[100:10000]
+                if data is not None:
+                    prompt = f"Summarize the {ticker}'s earnings performance based on it's earnings data {data} and its earnings transcript, and indicate whether the stock is poised for growth based on developments in the transcript: {transcript}"
+                else:
+                    prompt = f"Summarize the {ticker}'s earnings performance based on its transcript and indicate whether the stock is poised for growth based on developments in the transcript: {transcript}"
                 openai_resp = await client.post("https://api.openai.com/v1/chat/completions", headers={"Authorization": f"Bearer {openai_api_key}"},
                     json={
                         "model": "gpt-4",
-                        "messages": [{"role": "user", "content": f"Analyze and summarize {ticker}'s following earnings transcript: {transcript}"}],
+                        "messages": [{"role": "user", "content": f"{prompt}"}],
                         "temperature": 1,
                         "max_tokens": 500
                     })
