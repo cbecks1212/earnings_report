@@ -44,5 +44,20 @@ def return_valid_symbol(ticker: str):
         return False
     return True
 
+def chunk_transcripts(full_transcript: str, prompt: str) -> list:
+    chunks = []
+    chunks.append({"role" : "user", "content" : prompt})
+    full_transcript_len = len(full_transcript)
+    chunk_size = 8
+    transcript_chunk_size = full_transcript_len // chunk_size
+    start = 0
+    end = transcript_chunk_size
+    while start < full_transcript_len:
+        chunk = full_transcript[start:end]
+        chunks.append({"role" : "user", "content" : f"here is a section of the transcript to factor in your analysis {chunk}"})
+        start = end
+        end += transcript_chunk_size
+    return chunks
+
 
 

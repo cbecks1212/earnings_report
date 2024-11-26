@@ -9,7 +9,7 @@ from datetime import timedelta
 from openai import OpenAI
 import json
 from google.cloud import secretmanager
-from .common_functions import return_stock_metadata, return_constituents
+from .common_functions import return_stock_metadata, return_constituents, chunk_transcripts
 
 client = secretmanager.SecretManagerServiceClient()
 project_id = "orbital-kit-400022"
@@ -271,15 +271,17 @@ class EarningsCalculator:
             if len(resp) > 0:
             #client = OpenAI(api_key=openai_api_key)
                 transcript = resp[0]["content"]
-                transcript = transcript[100:10000]
+                #transcript = transcript[100:10000]
                 if data is not None:
-                    prompt = f"Summarize the {ticker}'s earnings performance based on it's earnings data {data} and its earnings transcript, and indicate whether the stock is poised for growth based on developments in the transcript: {transcript}"
+                    prompt = f"Summarize the {ticker}'s earnings performance based on it's earnings data {data} and its earnings transcript, and indicate whether the stock is poised for growth based on developments in the transcript. Due to the transcript's size, I will send it in batches:"
                 else:
-                    prompt = f"Summarize the {ticker}'s earnings performance based on its transcript and indicate whether the stock is poised for growth based on developments in the transcript: {transcript}"
+                    prompt = f"Summarize the {ticker}'s earnings performance based on its transcript and indicate whether the stock is poised for growth based on developments in the transcript. Due to the transcript's size, I will send it in batches:"
+                messages = chunk_transcripts(transcript, prompt)
+                print(messages)
                 openai_resp = await client.post("https://api.openai.com/v1/chat/completions", headers={"Authorization": f"Bearer {openai_api_key}"},
                     json={
-                        "model": "gpt-4",
-                        "messages": [{"role": "user", "content": f"{prompt}"}],
+                        "model": "gpt-4o",
+                        "messages": messages,
                         "temperature": 1,
                         "max_tokens": 500
                     })
