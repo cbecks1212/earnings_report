@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 from starlette import status
 from typing import Optional, List
@@ -58,7 +59,7 @@ async def get_price_after_earnings(symbol: str):
 @router.get("/price-after-earnings-timeseries", status_code=200)
 async def get_price_after_earnings_timeseries(symbol: str):
     earnings_calc = EarningsCalculator()
-    historical_earnings_df = earnings_calc.get_earnings_calendar(symbol)
-    historical_earnings_df['price_change_after_earnings'] = historical_earnings_df.apply(lambda x: earnings_calc.calc_price_perf_after_earnings(x.symbol, x.date.strftime("%F")), axis=1)
+    historical_earnings_df = await asyncio.to_thread(earnings_calc.get_earnings_calendar, symbol)
+    historical_earnings_df['price_change_after_earnings'] = await asyncio.to_thread(lambda: historical_earnings_df.apply(lambda x: earnings_calc.calc_price_perf_after_earnings(x.symbol, x.date.strftime("%F")), axis=1))
     dict_ = historical_earnings_df[['date', 'symbol', 'price_change_after_earnings']].to_dict(orient="records")
     return dict_
