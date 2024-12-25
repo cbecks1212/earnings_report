@@ -54,3 +54,11 @@ async def get_price_after_earnings(symbol: str):
     ticker_earnings_date = earnings_calc.get_earnings_announcement_symbol(symbol)['announcement_date']
     price_perf = EarningsCalculator().calc_price_perf_after_earnings(symbol, ticker_earnings_date)
     return {"symbol" : symbol, "earnings_date" : ticker_earnings_date, "stock_price_performance_after_earnings" : price_perf}
+
+@router.get("/price-after-earnings-timeseries", status_code=200)
+async def get_price_after_earnings_timeseries(symbol: str):
+    earnings_calc = EarningsCalculator()
+    historical_earnings_df = earnings_calc.get_earnings_calendar(symbol)
+    historical_earnings_df['price_change_after_earnings'] = historical_earnings_df.apply(lambda x: earnings_calc.calc_price_perf_after_earnings(x.symbol, x.date.strftime("%F")), axis=1)
+    dict_ = historical_earnings_df[['date', 'symbol', 'price_change_after_earnings']].to_dict(orient="records")
+    return dict_

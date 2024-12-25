@@ -159,7 +159,11 @@ class EarningsCalculator:
             dates = [prior_date, date]
             filtered_price_df = price_df.query("date in @dates")
             filtered_price_df['priceChangePostEarnings'] = filtered_price_df['close'].pct_change().dropna()
-            return str(filtered_price_df['priceChangePostEarnings'].iloc[-1])
+            try:
+                return str(filtered_price_df['priceChangePostEarnings'].iloc[-1])
+            except Exception as e:
+                print(e)
+                return "NULL"
         else:
             return "NULL"
         
@@ -461,6 +465,15 @@ class EarningsCalculator:
             return dict_
         
         return False
+    
+    def get_earnings_calendar(self, ticker: str):
+        today = datetime.today().date()
+        json_data = requests.get(f"https://financialmodelingprep.com/api/v3/historical/earning_calendar/{ticker}?apikey={payload}").json()
+        df = pd.json_normalize(json_data)
+        df["date"] = pd.to_datetime(df["date"]).dt.date
+        filtered_df = df[df['date'] <= today]
+        return filtered_df
+
         
 
         
